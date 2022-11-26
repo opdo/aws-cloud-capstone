@@ -12,6 +12,9 @@
     },
     "done": {
       "type": "boolean"
+    },
+    "uploadImage": {
+      "type": "boolean"
     }
   },
   "required": [

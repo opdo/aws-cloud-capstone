@@ -18,6 +18,7 @@ import {
 import { createTodo, deleteTodo, getTodos, patchTodo } from '../api/todos-api'
 import Auth from '../auth/Auth'
 import { Todo } from '../types/Todo'
+import { PopupEditTodo } from './PopupEditTodo'
 
 interface TodosProps {
   auth: Auth
@@ -28,21 +29,30 @@ interface TodosState {
   todos: Todo[]
   newTodoName: string
   loadingTodos: boolean
+  openEditPopup: boolean
+  editItem: Todo
 }
 
 export class Todos extends React.PureComponent<TodosProps, TodosState> {
   state: TodosState = {
     todos: [],
     newTodoName: '',
-    loadingTodos: true
+    loadingTodos: true,
+    openEditPopup: false,
+    editItem: {} as Todo
+  }
+
+  setOpenEditPopup(openEditPopup: boolean) {
+    this.setState({ openEditPopup })
   }
 
   handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({ newTodoName: event.target.value })
   }
 
-  onEditButtonClick = (todoId: string) => {
-    this.props.history.push(`/todos/${todoId}/edit`)
+  onEditButtonClick = (todo: Todo) => {
+    console.log("Edit to do,", todo)
+    this.setState({ editItem: todo, openEditPopup: true })
   }
 
   onTodoCreate = async (event: React.ChangeEvent<HTMLButtonElement>) => {
@@ -80,7 +90,8 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
       await patchTodo(this.props.auth.getIdToken(), todo.todoId, {
         name: todo.name,
         dueDate: todo.dueDate,
-        done: !todo.done
+        done: !todo.done,
+        uploadImage: false // Default is false
       })
       this.setState({
         todos: update(this.state.todos, {
@@ -112,6 +123,12 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
         {this.renderCreateTodoInput()}
 
         {this.renderTodos()}
+
+        {this.state.openEditPopup && <PopupEditTodo
+          display={this.state.openEditPopup}
+          closeFunction={() => { this.setOpenEditPopup(false) }}
+          item={this.state.editItem}
+          auth={this.props.auth} />}
       </div>
     )
   }
@@ -164,7 +181,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
 
         {this.state.todos.map((todo, pos) => {
           return (
-            <Grid.Column>
+            <Grid.Column key={pos}>
               <Card fluid>
                 {todo.attachmentUrl && (
                   <Image src={todo.attachmentUrl} fluid />
@@ -190,7 +207,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
                         <Button
                           icon
                           color="blue"
-                          onClick={() => this.onEditButtonClick(todo.todoId)}
+                          onClick={() => this.onEditButtonClick(todo)}
                         >
                           <Icon name="pencil" />
                         </Button>
