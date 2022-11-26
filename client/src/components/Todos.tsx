@@ -104,6 +104,10 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
   }
 
   async componentDidMount() {
+    this.getTodos()
+  }
+
+  async getTodos() {
     try {
       const todos = await getTodos(this.props.auth.getIdToken())
       this.setState({
@@ -114,6 +118,8 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
       alert(`Failed to fetch todos: ${(e as Error).message}`)
     }
   }
+
+
 
   render() {
     return (
@@ -126,7 +132,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
 
         {this.state.openEditPopup && <PopupEditTodo
           display={this.state.openEditPopup}
-          closeFunction={() => { this.setOpenEditPopup(false) }}
+          closeFunction={() => { this.setOpenEditPopup(false); this.setState({ loadingTodos: true }); this.getTodos(); }}
           item={this.state.editItem}
           auth={this.props.auth} />}
       </div>

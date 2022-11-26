@@ -31,6 +31,23 @@ export class TodosAccess {
         return items as TodoItem[]
     }
 
+
+    async getTodo(todoId: string, userId: string): Promise<TodoItem> {
+        logger.info('Getting to do')
+
+        const query = await this.docClient.query({
+            TableName: process.env.TODOS_TABLE,
+            KeyConditionExpression: 'userId = :userId AND todoId = :todoId',
+            ExpressionAttributeValues: {
+                ':userId': userId,
+                ':todoId': todoId
+            }
+        }).promise()
+
+        const items = query.Items
+        return items[0] as TodoItem
+    }
+
     async createTodo(data: TodoItem): Promise<TodoItem> {
         logger.info('Create todo')
 
@@ -64,17 +81,23 @@ export class TodosAccess {
     }
 
     // Update attachment Url
-    async updateImageSourceToDo(todoId: string, userId: string) {
-        const attachmentUrl = `https://${process.env.ATTACHMENT_S3_BUCKET}.s3.amazonaws.com/${todoId}`
+    async updateImageSourceToDo(todoId: string, userId: string, imageId: string) {
+        var attachmentUrl = `https://${process.env.ATTACHMENT_S3_BUCKET}.s3.amazonaws.com/${imageId}.png`
+        if (imageId === "" || imageId === null) {
+            attachmentUrl = null
+            imageId = null
+        }
+
         await this.docClient.update({
             TableName: this.tableName,
             Key: {
                 userId: userId,
                 todoId: todoId
             },
-            UpdateExpression: "set attachmentUrl = :attachmentUrl",
+            UpdateExpression: "set attachmentUrl = :attachmentUrl, imageId = :imageId",
             ExpressionAttributeValues: {
                 ":attachmentUrl": attachmentUrl,
+                ":imageId": imageId,
             },
         }).promise();
     }

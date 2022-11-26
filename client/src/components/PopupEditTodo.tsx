@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Form, Button, Checkbox, Modal, Image } from 'semantic-ui-react'
 import Auth from '../auth/Auth'
-import { getUploadUrl, patchTodo, uploadFile } from '../api/todos-api'
+import { deleteImage, getUploadUrl, patchTodo, uploadFile } from '../api/todos-api'
 import { Todo } from '../types/Todo'
 import { UpdateTodoRequest } from '../types/UpdateTodoRequest'
 
@@ -62,6 +62,17 @@ export class PopupEditTodo extends React.PureComponent<
         })
     }
 
+    onImageDelete = async (todoId: string) => {
+        try {
+            if (!window.confirm("Do you want to delete this image?")) return;
+
+            await deleteImage(this.props.auth.getIdToken(), todoId)
+            this.props.closeFunction()
+        } catch {
+            alert('Image deletion failed')
+        }
+    }
+
     handleSubmit = async (event: React.SyntheticEvent) => {
         event.preventDefault()
 
@@ -110,7 +121,9 @@ export class PopupEditTodo extends React.PureComponent<
                     {this.props.item && this.props.item.attachmentUrl &&
                         <div style={{ margin: '20px' }}>
                             <Image size='medium' src={this.props.item.attachmentUrl} wrapped />
-                            <Button content='Remove image' basic color='red' fluid style={{ marginTop: '5px' }} />
+                            <Button basic color='red' fluid style={{ marginTop: '5px' }} onClick={() => this.onImageDelete(this.props.item.todoId)}>
+                                Remove Image
+                            </Button>
                         </div>
                     }
                     <Modal.Description>
