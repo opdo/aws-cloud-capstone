@@ -24,6 +24,11 @@ export default class Auth {
     this.getAccessToken = this.getAccessToken.bind(this);
     this.getIdToken = this.getIdToken.bind(this);
     this.renewSession = this.renewSession.bind(this);
+
+    // Get token in case user refresh their browser
+    if (localStorage.getItem('isLoggedIn') === "true") {
+      this.loadToken();
+    }
   }
 
   login() {
@@ -62,19 +67,22 @@ export default class Auth {
     this.idToken = authResult.idToken;
     this.expiresAt = expiresAt;
 
+    // Storge token to localStorage
+    this.storageToken();
+
     // navigate to the home route
     this.history.replace('/');
   }
 
   renewSession() {
     this.auth0.checkSession({}, (err, authResult) => {
-       if (authResult && authResult.accessToken && authResult.idToken) {
-         this.setSession(authResult);
-       } else if (err) {
-         this.logout();
-         console.log(err);
-         alert(`Could not get a new token (${err.error}: ${err.error_description}).`);
-       }
+      if (authResult && authResult.accessToken && authResult.idToken) {
+        this.setSession(authResult);
+      } else if (err) {
+        this.logout();
+        console.log(err);
+        alert(`Could not get a new token (${err.error}: ${err.error_description}).`);
+      }
     });
   }
 
@@ -100,5 +108,17 @@ export default class Auth {
     // access token's expiry time
     let expiresAt = this.expiresAt;
     return new Date().getTime() < expiresAt;
+  }
+
+  storageToken() {
+    localStorage.setItem('accessToken', this.accessToken);
+    localStorage.setItem('idToken', this.idToken);
+    localStorage.setItem('expiresAt', this.expiresAt);
+  }
+
+  loadToken() {
+    this.accessToken = localStorage.getItem('accessToken');
+    this.idToken = localStorage.getItem('idToken');
+    this.expiresAt = localStorage.getItem('expiresAt');
   }
 }
