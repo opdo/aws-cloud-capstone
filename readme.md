@@ -18,6 +18,9 @@ You can check [my commit here](https://github.com/opdo/aws-clould-capstone/commi
 You can see in [this commit](https://github.com/opdo/aws-clould-capstone/commit/f3efe38dd0c0c21820a19c035366ce0103c4eb27), I enhance todos UI is more beautiful than the original. I learned how to use Gird in sematic ui and change the component.
 
 ### `Edit todo in Popup`
+
+![](./images/popup.png)
+
 In [this commit](https://github.com/opdo/aws-clould-capstone/commit/72c7076dee4155ee2043cec070149495871157ce), I create a Modal that allow user can modify/edit todo's infomation and upload image in a Modal, that is more convenience than the original version.
 
 ### `Remove Image`
