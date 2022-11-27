@@ -3,18 +3,23 @@ import { Todo } from '../types/Todo';
 import { CreateTodoRequest } from '../types/CreateTodoRequest';
 import Axios from 'axios'
 import { UpdateTodoRequest } from '../types/UpdateTodoRequest';
+import { TodoPagination } from '../types/TodoPagination';
 
-export async function getTodos(idToken: string): Promise<Todo[]> {
+export async function getTodos(idToken: string, limit: number, nextKey: string): Promise<TodoPagination> {
   console.log('Fetching todos')
 
-  const response = await Axios.get(`${apiEndpoint}/todos`, {
+  const response = await Axios.get<TodoPagination>(`${apiEndpoint}/todos`, {
+    params: {
+      limit: limit,
+      nextKey: nextKey
+    },
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${idToken}`
     },
   })
   console.log('Todos:', response.data)
-  return response.data.items
+  return response.data
 }
 
 export async function createTodo(

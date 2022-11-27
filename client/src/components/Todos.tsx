@@ -12,13 +12,21 @@ import {
   Input,
   Image,
   Loader,
-  Card
+  Card,
+  Select
 } from 'semantic-ui-react'
 
 import { createTodo, deleteTodo, getTodos, patchTodo } from '../api/todos-api'
 import Auth from '../auth/Auth'
 import { Todo } from '../types/Todo'
 import { PopupEditTodo } from './PopupEditTodo'
+
+const limitOptions = [
+  { key: '3', value: 3, text: '3 items per page' },
+  { key: '6', value: 6, text: '6 items per page' },
+  { key: '12', value: 12, text: '12 items per page' },
+  { key: '24', value: 24, text: '24 items per page' },
+]
 
 interface TodosProps {
   auth: Auth
@@ -31,6 +39,10 @@ interface TodosState {
   loadingTodos: boolean
   openEditPopup: boolean
   editItem: Todo
+  nextKey: string
+  limit: number
+  nextKeyList: string[],
+  currentKey: string
 }
 
 export class Todos extends React.PureComponent<TodosProps, TodosState> {
@@ -39,11 +51,37 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
     newTodoName: '',
     loadingTodos: true,
     openEditPopup: false,
-    editItem: {} as Todo
+    editItem: {} as Todo,
+    nextKey: '',
+    limit: 6,
+    nextKeyList: [],
+    currentKey: ''
+  }
+
+  setLimit(limit: number) {
+    this.setState({ nextKeyList: [], limit, nextKey: '' })
+    this.getTodos(limit, '')
   }
 
   setOpenEditPopup(openEditPopup: boolean) {
     this.setState({ openEditPopup })
+  }
+
+  onClickNextButton() {
+    console.log("Next button", this.state.nextKeyList)
+    var nextKeyList = this.state.nextKeyList;
+    nextKeyList.push(this.state.currentKey);
+    this.setState({ nextKeyList })
+
+    this.getTodos(this.state.limit, this.state.nextKey)
+  }
+
+  onClickPreButton() {
+    var nextKeyList = this.state.nextKeyList;
+    var preKey = nextKeyList.pop();
+    this.setState({ nextKeyList })
+
+    this.getTodos(this.state.limit, preKey)
   }
 
   handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,11 +145,25 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
     this.getTodos()
   }
 
-  async getTodos() {
+  async getTodos(limit?: number, nextKey?: string) {
     try {
-      const todos = await getTodos(this.props.auth.getIdToken())
+      if (limit === undefined || limit === null) {
+        limit = this.state.limit
+      }
+      if (nextKey === undefined || nextKey === null) {
+        nextKey = this.state.nextKey
+      }
+
       this.setState({
-        todos,
+        loadingTodos: true,
+        currentKey: nextKey
+      })
+
+      const result = await getTodos(this.props.auth.getIdToken(), limit, nextKey)
+
+      this.setState({
+        todos: result.items,
+        nextKey: result.nextKey ?? '',
         loadingTodos: false
       })
     } catch (e) {
@@ -128,6 +180,21 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
 
         {this.renderCreateTodoInput()}
 
+        <div style={{ paddingBottom: '15px', textAlign: 'right' }}>
+          <Select placeholder='Page size' style={{ marginRight: '10px' }} options={limitOptions} value={this.state.limit} onChange={(e, data) => this.setLimit(Number(data.value))} />
+          <Button primary
+            content='Previous'
+            icon='left arrow'
+            labelPosition='left'
+            onClick={() => this.onClickPreButton()}
+            disabled={(this.state.nextKeyList.length === 0)} />
+          <Button primary
+            content='Next'
+            icon='right arrow'
+            labelPosition='right'
+            onClick={() => this.onClickNextButton()}
+            disabled={(this.state.nextKey === null || this.state.nextKey === '')} />
+        </div>
         {this.renderTodos()}
 
         {this.state.openEditPopup && <PopupEditTodo
@@ -153,6 +220,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
             }}
             fluid
             placeholder="To change the world..."
+            value={this.state.newTodoName}
             onChange={this.handleNameChange}
           />
         </Grid.Column>

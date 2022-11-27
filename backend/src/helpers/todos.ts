@@ -5,6 +5,7 @@ import { CreateTodoRequest } from '../requests/CreateTodoRequest'
 import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
 import { createLogger } from '../utils/logger'
 import { v4 as uuidv4 } from 'uuid';
+import { TodoPagination } from '../models/TodoPagination';
 
 const todoAccess = new TodosAccess()
 const attachmentUtils = new AttachmentUtils()
@@ -26,10 +27,10 @@ export async function createTodo(model: CreateTodoRequest, userId: string): Prom
     return await todoAccess.createTodo(newItem);
 }
 
-export async function getTodosForUser(userId: string): Promise<any> {
+export async function getTodosForUser(userId: string, limit: number, key: any): Promise<TodoPagination> {
     logger.info("Get to do user id", userId)
 
-    return await todoAccess.getTodos(userId);
+    return await todoAccess.getTodos(userId, limit, key);
 }
 
 export async function deleteTodo(todoId: string, userId: string) {
