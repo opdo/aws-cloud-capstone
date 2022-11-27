@@ -27,7 +27,7 @@ provider:
     REGION: us-east-1
     TODOS_TABLE: TodosDB-${self:provider.stage}
     TODOS_CREATED_AT_INDEX: CreatedAtIndex
-    ATTACHMENT_S3_BUCKET: vinhpn4-serverless-bucket-${self:provider.stage}
+    ATTACHMENT_S3_BUCKET: vinhpn4-image-bucket-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 300
 
   logs:
@@ -201,6 +201,25 @@ functions:
         Resource:
           - "*"
 
+  ResizeImage:
+    handler: src/lambda/s3/resizeImage.handler
+    iamRoleStatementsInherit: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action: 
+          - s3:GetObject
+          - s3:PutObject
+          - s3:DeleteObject
+        Resource: 'arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*'
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+          - dynamodb:GetItem
+          - dynamodb:UpdateItem
+          - dynamodb:Query
+          - dynamodb:Scan
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+
   # TODO: Configure this function
   # Provide property for setting up CORS, Authorizer, iamRoleStatements
   GenerateUploadUrl:
@@ -282,6 +301,10 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:provider.environment.ATTACHMENT_S3_BUCKET}
+        NotificationConfiguration:
+          LambdaConfigurations:
+          - Event: s3:ObjectCreated:*
+            Function: !GetAtt ResizeImageLambdaFunction.Arn
         AccessControl: PublicRead
         CorsConfiguration:
           CorsRules:
@@ -297,6 +320,15 @@ resources:
                 - DELETE
                 - HEAD
               MaxAge: 3000
+
+    ResizeImagePermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: !Ref ResizeImageLambdaFunction
+        Principal: 's3.amazonaws.com'
+        Action: lambda:InvokeFunction
+        SourceAccount: !Ref AWS::AccountId
+        SourceArn: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}
 
     # TODO: Complete the policy below and attach it to the bucket defined above
     # For cross referencing the name of the bucket, use "!Ref AttachmentsBucket"

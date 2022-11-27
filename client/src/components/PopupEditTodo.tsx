@@ -145,7 +145,7 @@ export class PopupEditTodo extends React.PureComponent<
                             </Form.Field>
 
                             <Form.Field>
-                                <label>Upload Image</label>
+                                <label>Upload Image (your image will be resize to reduce size after upload)</label>
                                 <input
                                     type="file"
                                     accept="image/*"

@@ -151,7 +151,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
         limit = this.state.limit
       }
       if (nextKey === undefined || nextKey === null) {
-        nextKey = this.state.nextKey
+        nextKey = ''
       }
 
       this.setState({
